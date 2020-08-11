@@ -2,12 +2,12 @@
 
 % First get a cell array with the full path to each individual subject file
 
-PROJECT_DIR = '/Users/tlscott/make_parcels/';
+PROJECT_DIR = '/Volumes/data/users/julie/make_parcels-master/';
 
 FILENAMES = {};
 
-for i = 1:20
-    FILENAMES{i} = [PROJECT_DIR 'data/NWR_4-1syl/s' num2str(i) '_zstat1.nii.gz'];
+for i = 1:22
+    FILENAMES{i} = [PROJECT_DIR 'data/asl_unthresholded/ssl_struc_rand_regular/' num2str(i) '_zstat.nii.gz'];
 end
 
 options = struct( ...
@@ -16,7 +16,7 @@ options = struct( ...
 	'THRESH', 2.326348, ... # Numeric value to threshold volumes at
 	'PCT_SUBJ_IN_PARC', 0.80, ... # Percent of subjects needed to consider a parcel "significant" or, representing the majority of subjects.
     'peak_spacing', 0, ... # Minimum distance between peaks of different parcels, in number of voxels. Ex. 3 means all local maxima have to be 3 voxels apart.
-	'EXPERIMENT', 'My_Experiment', ... # For naming outputs
-	'PATH_TO_RESULTS_DIR', [PROJECT_DIR 'parcels/My_Experiment']); % Where to put the outputs
+	'EXPERIMENT', 'ASL_Linguistic_test18', ... # For naming outputs
+	'PATH_TO_RESULTS_DIR', [PROJECT_DIR 'parcels/ASL_Linguistic_22_test']); % Where to put the outputs
 
 generate_parcels(FILENAMES, options);

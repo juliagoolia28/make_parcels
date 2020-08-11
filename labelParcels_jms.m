@@ -1,4 +1,4 @@
-function [num_code,peak_labels,max_intersect_label] = labelParcels(P,D,parcel_nums)
+function [num_code,peak_labels,max_intersect_label] = labelParcels(P,D,parcel_numbers)
 
 HO_cort = MRIread('./template_brains/HarvardOxford-cort-maxprob-thr0-2mm.nii.gz',0);
 HO_sub = MRIread('./template_brains/HarvardOxford-sub-maxprob-thr0-2mm.nii.gz',0);
@@ -13,12 +13,12 @@ HO_sub_label = removeSpaces(HO_sub_label);
 Cereb_label = removeSpaces(Cereb_label);
 
 peak_labels = [HO_cort_label;HO_cort_label;HO_cort_label;HO_cort_label;];
-peak_labels = peak_labels(1:length(parcel_nums));
+peak_labels = peak_labels(1:length(parcel_numbers));
 max_intersect_label = peak_labels;
 
-for i = 1:length(parcel_nums)
+for i = 1:length(parcel_numbers)
     
-    peak_vox(i) = find((P == parcel_nums(i)),1);
+    peak_vox(i) = find((P == parcel_numbers(i)),1);
     num_code(i) = HO_cort.vol(peak_vox(i));
     
     if num_code(i) ~= 0
@@ -37,12 +37,12 @@ for i = 1:length(parcel_nums)
             if num_code ~= 0
                 peak_labels(i) = Cereb_label(num_code(i));
             else
-                peak_labels(i) = cellstr('unidentified');
+                peak_labels(i) = 'unidentified';
             end
         end
     end
   
-    max_code(i) = get_max_intersect(HO_cort.vol,D,parcel_nums(i));
+    max_code(i) = get_max_intersect(HO_cort.vol,D,parcel_numbers(i));
     
     if max_code(i) ~= 0
         if HO_sub.vol(peak_vox(i)) <= 7
@@ -52,15 +52,15 @@ for i = 1:length(parcel_nums)
         end
         max_intersect_label(i) = strcat(hemi,HO_cort_label(max_code(i)));
     else
-        max_code(i) = get_max_intersect(HO_sub.vol,D,parcel_nums(i));
+        max_code(i) = get_max_intersect(HO_sub.vol,D,parcel_numbers(i));
         if max_code(i) ~= 0
             max_intersect_label(i) = HO_sub_label(max_code(i));
         else
-            max_code(i) = get_max_intersect(Cereb.vol,D,parcel_nums(i));
+            max_code(i) = get_max_intersect(Cereb.vol,D,parcel_numbers(i));
             if max_code(i) ~= 0
                 max_intersect_label(i) = Cereb_label(max_code(i));
             else
-                max_intersect_label(i) = cellstr('unidentified');
+                max_intersect_label(i) = 'unidentified';
             end
         end
     end
@@ -98,10 +98,7 @@ function [HO_cort_code,HO_cort_label] = importHarvardOxfordLabels
 %% Initialize variables.
 filename = './template_brains/HarvardOxford_cort_labels.txt';
 delimiter = '\t';
-if nargin<=2
-    startRow = 1;
-    endRow = inf;
-end
+
 %% Read columns of data as strings:
 % For more information, see the TEXTSCAN documentation.
 formatSpec = '%s%s%[^\n\r]';
@@ -113,16 +110,8 @@ fileID = fopen(filename,'r');
 % This call is based on the structure of the file used to generate this
 % code. If an error occurs for a different file, try regenerating the code
 % from the Import Tool.
-%dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
-dataArray = textscan(fileID, formatSpec, endRow(1)-startRow(1)+1, 'Delimiter', delimiter, 'HeaderLines', startRow(1)-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
+dataArray = textscan(fileID, formatSpec, 'Delimiter', delimiter,  'ReturnOnError', false);
 
-for block=2:length(startRow)
-    frewind(fileID);
-    dataArrayBlock = textscan(fileID, formatSpec, endRow(block)-startRow(block)+1, 'Delimiter', delimiter, 'HeaderLines', startRow(block)-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
-    for col=1:length(dataArray)
-        dataArray{col} = [dataArray{col};dataArrayBlock{col}];
-    end
-end
 %% Close the text file.
 fclose(fileID);
 
@@ -179,7 +168,7 @@ HO_cort_code = HO_cort_code + 1;
 %% Clear temporary variables
 clearvars filename delimiter formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns;
 
-function [HO_sub_codes,HO_sub_labels] = importHarvardOxfordLabels_subcort
+function [HO_sub_code,HO_sub_label] = importHarvardOxfordLabels_subcort
 
 %% Import data from text file.
 % Script for importing data from the following text file:
@@ -256,15 +245,15 @@ rawCellColumns = raw(:, 2);
 
 
 %% Allocate imported array to column variable names
-HO_sub_codes = cell2mat(rawNumericColumns(:, 1));
-HO_sub_labels = rawCellColumns(:, 1);
+HO_sub_code = cell2mat(rawNumericColumns(:, 1));
+HO_sub_label = rawCellColumns(:, 1);
 
-HO_sub_codes = HO_sub_codes + 1;
+HO_sub_code = HO_sub_code + 1;
 
 %% Clear temporary variables
 clearvars filename delimiter formatSpec fileID dataArray ans raw col numericData rawData row regexstr result numbers invalidThousandsSeparator thousandsRegExp me rawNumericColumns rawCellColumns;
 
-function [Cereb_codes,Cereb_labels] = importCerebellumLabels
+function [Cereb_code,Cereb_label] = importCerebellumLabels
 
 %% Import data from text file.
 % Script for importing data from the following text file:
@@ -306,8 +295,8 @@ fclose(fileID);
 % script.
 
 %% Allocate imported array to column variable names
-Cereb_codes = dataArray{:, 1};
-Cereb_labels = dataArray{:, 2};
+Cereb_code = dataArray{:, 1};
+Cereb_label = dataArray{:, 2};
 Cereb_other = dataArray{:, 3};
 
 
